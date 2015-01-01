@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture" "fom/old_book"
+	"$vertexalpha" "1"
+	"$translucent" "1"
+	"$no_fullbright" 1	
+}

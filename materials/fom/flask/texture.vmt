@@ -1,0 +1,9 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "fom/flask/texture"
+	"$surfaceprop" "glass"
+	"$model" 1
+	"$translucent" 0
+	"$alpha" 255
+	"$phong" 1
+}

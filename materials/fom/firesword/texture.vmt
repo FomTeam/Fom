@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "fom/firesword/texture"
+	"$surfaceprop" "metal"
+	"$model" 1
+	"$phong" 1
+}

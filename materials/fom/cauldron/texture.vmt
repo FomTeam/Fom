@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "fom/cauldron/texture"
+	"$surfaceprop" "metal"
+	"$model" 1
+	"$phong" 1
+}
