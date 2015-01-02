@@ -97,6 +97,10 @@ spawnmenu.AddCreationTab("Magic", function()
 	fom_spawnmenuaddtab("icon16/pill.png", "Flasks", "fom_flasks", folder_alchemy, tab)
 	fom_spawnmenuaddtab("icon16/box.png", "Alchemist's stuff", "fom_entity", folder_alchemy, tab)
 	
+	//Runes
+	local folder_runes = tree:AddNode("Runes", "icon16/script.png")
+	
+	
 	//Help and guides
 	local folder_help = tree:AddNode("Help", "icon16/information.png")
 	for k, v in pairs(guides) do
@@ -123,6 +127,7 @@ spawnmenu.AddCreationTab("Magic", function()
 	folder_help:SetExpanded(true)
 	folder_misc:SetExpanded(true)
 	folder_alchemy:SetExpanded(true)
+	folder_runes:SetExpanded(true)
 	
 	return tab
 end, "icon16/color_wheel.png", 200)
