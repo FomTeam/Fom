@@ -18,18 +18,18 @@ if CLIENT then _addMagicEntity("Crystal ball", "fom_sphere", "fom_entity_stuff")
 
 function ENT:Initialize()
 	if CLIENT then 
-		self.model = ClientsideModel("models/Gibs/HGIBS.mdl")
+		self.model = ClientsideModel("models/XQM/Rails/gumball_1.mdl")
 		self.model:SetPos(self:LocalToWorld(Vector(0, 0, 15)))
-		self.model:SetModelScale(3.5, 0)
+		self.model:SetModelScale(0.9, 0)
 		self.model:SetParent(self)
 		self.model:SetMaterial("models/debug/debugwhite")
 		self.model:SetRenderMode(RENDERMODE_TRANSALPHA)
-		self.model:SetColor(Color(0, 255, 255, 100))
+		self.model:SetColor(Color(255, 255, 255, 180))
 		
 		return 
 	end
 
-	self:SetModel("models/Mechanics/gears/gear16x6.mdl")
+	self:SetModel("models/props_phx/gears/bevel90_24.mdl")
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:PhysicsInit(SOLID_VPHYSICS)

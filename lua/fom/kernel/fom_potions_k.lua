@@ -9,8 +9,22 @@
 fom_potions_list = {}
 fom_potions_manager = {}
 
+function fom_CheckPotion(tab)
+	if type(tab.recipe) == "string" then
+		if fom_potions_manager.GetPotionByRecipe(tab.recipe) then return true end
+	elseif type(tab.recipe) == "table" then
+		for _, r in pairs(tab.recipe) do
+			if fom_potions_manager.GetPotionByRecipe(r) then return true end
+		end
+	end
+	
+	return false
+end
+
 //Adds potion
 fom_potions_manager.AddPotion = function(tab)
+	if fom_CheckPotion(tab) then print("FOM: Potion '" .. tab.name .. "' was not added! Reason: this potion is already exists!") return {} end
+	
 	table.insert(fom_potions_list, tab)
 	return tab
 end
@@ -28,21 +42,38 @@ end
 fom_potions_manager.GetPotionByRecipe = function(recipe)
 	local str = string.Explode(" ", string.lower(recipe))
 	local count = 0
-
-	for _, v in pairs(fom_potions_list) do
-		local str1 = string.Explode(" ", string.lower(v.recipe))
 	
-		if #str == #str1 then
-			for _, p in pairs(str1) do
-				if not string.find(string.lower(recipe), string.lower(p)) then break end
+	for _, v in pairs(fom_potions_list) do
+		if type(v.recipe) == "string" then
+			local str1 = string.Explode(" ", string.lower(v.recipe))
+		
+			if #str == #str1 then
+				for _, p in pairs(str1) do
+					if not string.find(string.lower(recipe), string.lower(p)) then break end
+					
+					count = count + 1
+				end
 				
-				//Crutch! This is crutch!
-				count = count + 1
+				if count == #str1 then return v end
+				
+				count = 0
 			end
+		elseif type(v.recipe) == "table" then
+			for _, r in pairs(v.recipe) do
+				local str1 = string.Explode(" ", string.lower(r))
 			
-			if count == #str1 then return v end
-			
-			count = 0
+				if #str == #str1 then
+					for _, p in pairs(str1) do
+						if not string.find(string.lower(recipe), string.lower(p)) then break end
+						
+						count = count + 1
+					end
+					
+					if count == #str1 then return v end
+					
+					count = 0
+				end
+			end
 		end
 	end
 	

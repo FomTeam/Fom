@@ -149,19 +149,19 @@ function ENT:StartMakingPotion(potion)
 		if not const_int then const_int = 0 end
 		const_int = potion.time - const_int
 		if const_int <= 0 then const_int = 1 end
-		
+			
 		self:ClientNotify(true, const_int)
-		
+			
 		timer.Create("fom_make_potion" .. self:EntIndex(), const_int, 1, function()
 			if self and IsValid(self) then 
 				self.liquid_state = potion
 				self.liquid_color = Color(potion.color.r, potion.color.g, potion.color.b, 10)
 				for k, v in pairs(self.brew_ingredients) do if IsValid(v) then v:Remove() end end
-				
+					
 				self:ClientNotify(false, 0)
 			end
 		end)
-		
+			
 		timer.Create("fom_make_potion_eff" .. self:EntIndex(), 1, const_int, function()
 			if self and IsValid(self) then 
 				local ef = EffectData()

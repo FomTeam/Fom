@@ -9,6 +9,8 @@
 	UseFunc(ply)
 	
 	Coded and managed by Trojan
+	
+	P.S Recipe may be a table if you want
 *****/
 
 
@@ -107,7 +109,7 @@ fom_potions_manager.AddPotion({
 	end,
 	
 	CollisionFunc = function(ent, pos)
-		for k, v in pairs(ents.FindInSphere(ent:GetPos(), 650)) do
+		for k, v in pairs(ents.FindInSphere(ent:GetPos(), 450)) do
 			if IsValid(v) and (v:IsNPC() or v:IsPlayer()) then v:TakeDamage(999) end
 		end
 	end
@@ -134,7 +136,7 @@ fom_potions_manager.AddPotion({
 fom_potions_manager.AddPotion({
 	name = "Extinguish potion",
 	desc = "Extinguishes something",
-	recipe = "Snow",
+	recipe = "Bone Bone Wood Iron",
 	color = Color(0, 255, 255),
 	time = 8,
 	
@@ -145,6 +147,55 @@ fom_potions_manager.AddPotion({
 	CollisionFunc = function(ent, pos)
 		for k, v in pairs(ents.FindInSphere(ent:GetPos(), 650)) do
 			if IsValid(v) then v:Extinguish() end
+		end
+	end
+})
+
+fom_potions_manager.AddPotion({
+	name = "Power potion",
+	desc = "Throwes",
+	recipe = { [1] = "Wood Wood Wood Wood", [2] = "Wood Iron Iron Wood" },
+	color = Color(0, 0, 255),
+	time = 15,
+	
+	UseFunc = function(ply)
+		if IsValid(ply) then ply:SetJumpPower(700) end
+	end,
+	
+	CollisionFunc = function(ent, pos)
+		for k, v in pairs(ents.FindInSphere(ent:GetPos(), 650)) do
+			if IsValid(v) and IsValid(v:GetPhysicsObject()) then v:SetVelocity((v:GetPos() - pos):GetNormal() * 1500) end
+		end
+	end
+})
+
+fom_potions_manager.AddPotion({
+	name = "Disintegrator potion",
+	desc = "Throwes",
+	recipe = { [1] = "Iron Gold CombMet Steel", [2] = "Iron Iron Iron Iron Steel CombMet", [3] = "Iron Steel CombMet CombMet CombMet" },
+	color = Color(255, 255, 0),
+	time = 25,
+	
+	UseFunc = function(ply)
+		if IsValid(ply) then ply:Kill() end
+	end,
+	
+	CollisionFunc = function(ent, pos)
+		for k, v in pairs(ents.FindInSphere(ent:GetPos(), 650)) do
+			if IsValid(v) and (v:IsNPC() or v:IsPlayer()) then 
+				local dmg = DamageInfo()
+				dmg:SetDamage(1500)
+				dmg:SetAttacker(ent)
+				dmg:SetInflictor(ent)
+				dmg:SetDamageType(DMG_DISSOLVE)
+				v:TakeDamageInfo(dmg)
+				
+				local ef = EffectData()
+				ef:SetOrigin(v:GetPos())
+				util.Effect("Explosion", ef)
+				
+				SafeRemoveEntity(ent)
+			end
 		end
 	end
 })

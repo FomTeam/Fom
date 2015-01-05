@@ -108,6 +108,8 @@ function SWEP:Holster()
 			self:ResetBonePositions(vm)
 		end
 	end
+	
+	self:KillSound()
 
 	return true
 end
@@ -544,7 +546,7 @@ end
 function SWEP:PrimaryAttack()
 	self.Weapon:SetNextPrimaryFire(CurTime() + 0.1)
 	
-	self.Owner:EmitSound("beams/beamstart5.wav")
+	if not self.Sound then self.Sound = CreateSound(self.Owner, "ambient/energy/electric_loop.wav") self.Sound:Play() self.Owner:EmitSound("ambient/energy/weld1.wav") end
 	
 	local startpos = self.Owner:GetShootPos() + self.Owner:GetRight() * 7
 	
@@ -554,11 +556,15 @@ function SWEP:PrimaryAttack()
 		filter = self.Owner
 	}
 	
+	local ef = EffectData()
+	
 	for i = 1, 10 do
-		local ef = EffectData()
 		ef:SetStart(startpos)
 		ef:SetOrigin(tr.HitPos)
 		util.Effect("fom_effect_shadow", ef)
+		util.Effect("effect_econc_pp", ef)
+		
+		if tr.HitSky then return end
 		
 		local ent = tr.Entity
 		if IsValid(ent) then 
@@ -568,6 +574,11 @@ function SWEP:PrimaryAttack()
 			dmg:SetInflictor(self)
 			dmg:SetDamageType(DMG_DISSOLVE)
 			ent:TakeDamageInfo(dmg)
+			
+			ef:SetOrigin(ent:GetPos())
+			util.Effect("Explosion", ef)
+			
+			SafeRemoveEntity(ent)
 		end
 		
 		startpos = tr.HitPos
@@ -581,6 +592,20 @@ function SWEP:PrimaryAttack()
 			filter = NULL
 		}
 	end
+	
+	util.Decal("scorch", tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
+end
+
+function SWEP:KillSound()
+	if self.Sound then self.Sound:Stop() self.Sound = nil self.Owner:EmitSound("ambient/energy/weld1.wav") end
+end
+
+function SWEP:OnRemove()
+	self:KillSound()
+end
+
+function SWEP:Think()
+	if self.Owner:KeyReleased(IN_ATTACK) then self:KillSound() end
 end
 
 function SWEP:SecondaryAttack()
