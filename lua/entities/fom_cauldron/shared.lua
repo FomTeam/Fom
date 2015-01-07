@@ -63,10 +63,12 @@ if CLIENT then
 	usermessage.Hook("fom_client_notify", function(data)
 		local b = data:ReadBool()
 		local n = data:ReadFloat()
+		local name = data:ReadString()
 		local ent = data:ReadEntity()
 		
 		ent.client_time_toready = n
 		ent.client_notify = b
+		ent.client_potion_name = name
 	end)
 
 	usermessage.Hook("fom_changed_ingredients", function(data)
@@ -130,10 +132,11 @@ function ENT:SetUpIngredient(v)
 	return v
 end
 
-function ENT:ClientNotify(b, t)
+function ENT:ClientNotify(b, t, s)
 	umsg.Start("fom_client_notify")
 		umsg.Bool(b)
 		umsg.Float(t)
+		umsg.String(s)
 		umsg.Entity(self)
 	umsg.End()
 	
@@ -150,7 +153,7 @@ function ENT:StartMakingPotion(potion)
 		const_int = potion.time - const_int
 		if const_int <= 0 then const_int = 1 end
 			
-		self:ClientNotify(true, const_int)
+		self:ClientNotify(true, const_int, potion.name)
 			
 		timer.Create("fom_make_potion" .. self:EntIndex(), const_int, 1, function()
 			if self and IsValid(self) then 
@@ -158,7 +161,7 @@ function ENT:StartMakingPotion(potion)
 				self.liquid_color = Color(potion.color.r, potion.color.g, potion.color.b, 10)
 				for k, v in pairs(self.brew_ingredients) do if IsValid(v) then v:Remove() end end
 					
-				self:ClientNotify(false, 0)
+				self:ClientNotify(false, 0, "")
 			end
 		end)
 			
@@ -179,7 +182,7 @@ end
 function ENT:StopMakingPotion()
 	if CLIENT then return end
 	
-	self:ClientNotify(false, 0)
+	self:ClientNotify(false, 0, "")
 	timer.Destroy("fom_make_potion" .. self:EntIndex())
 	timer.Destroy("fom_make_potion_eff" .. self:EntIndex())
 	
@@ -198,9 +201,9 @@ function ENT:ProcessHeat()
 					if (v:IsOnFire() or v:GetClass() == "fom_bonfire") and self.heat_amount < self.heat_max then
 						self.heat_amount = math.Approach(self.heat_amount, self.heat_max, 1)
 					elseif self:WaterLevel() >= 3 then --[[Cauldron in the water]]--
-						self.heat_amount = math.Approach(self.heat_amount, fom_magic_manager.outdoor_temp, 25)
-					elseif self.heat_amount > fom_magic_manager.outdoor_temp then
-						self.heat_amount = math.Approach(self.heat_amount, fom_magic_manager.outdoor_temp, 0.1) --[[Air cooling, no water]]--
+						self.heat_amount = math.Approach(self.heat_amount, fom_runes_manager.outdoor_temp, 25)
+					elseif self.heat_amount > fom_runes_manager.outdoor_temp then
+						self.heat_amount = math.Approach(self.heat_amount, fom_runes_manager.outdoor_temp, 0.1) --[[Air cooling, no water]]--
 					end
 				end
 				self.heat_process = false
@@ -253,7 +256,7 @@ function ENT:Initialize()
 	self.heat_combustion_point = 310
 	self.heat_brewing_point = 80
 	self.heat_hurt_point = 65
-	self.heat_amount = fom_magic_manager.outdoor_temp --[[Outdoor temperature from magicmanager]]--
+	self.heat_amount = fom_runes_manager.outdoor_temp --[[Outdoor temperature from magicmanager]]--
 	self.heat_process = false
 	self.brew_ingredients = {}
 	
@@ -297,9 +300,9 @@ function ENT:Draw()
 	if not self.make_points then
 		self.make_points = true
 	
-		timer.Create("fom_make_points" .. self:EntIndex(), 0.5, 1, function()
+		timer.Create("fom_make_points" .. self:EntIndex(), 0.4, 1, function()
 			if IsValid(self) then
-				if self.points != "..." then self.points = self.points .. "." else self.points = "" end
+				if self.points != "...." then self.points = self.points .. "." else self.points = "." end
 				
 				self.make_points = false
 			end
@@ -308,10 +311,12 @@ function ENT:Draw()
 
 	
 	local angle = (self:GetPos() - LocalPlayer():GetPos()):Angle().y - 90
+	local name = self.client_potion_name
+	if not name then name = "" end
 	cam.Start3D2D(self:LocalToWorld(Vector(0, 0, 65)), Angle(0, angle, 90), 0.06)
 		if self.brew_ingredients_client and self.brew_ingredients_client != "" then draw.DrawText("Ingredients: " .. self.brew_ingredients_client, "fom_font1", 0, 0, Color(255, 255, 255), TEXT_ALIGN_CENTER) end
 		if self.client_time_toready and self.points and self.client_notify then
-			draw.DrawText("Making potion " .. self.client_time_toready .. self.points, "fom_font1", 0, -280, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+			draw.DrawText("Making " .. string.lower(name) .. " " .. self.client_time_toready .. self.points, "fom_font1", 0, -280, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 		end
 		if self:GetNWFloat("fom_heat_amount") then
 			draw.DrawText("t " .. math.Round(self:GetNWFloat("fom_heat_amount")) .. "°C", "fom_font1", 0, -140, Color(255, 255, 255), TEXT_ALIGN_CENTER)
@@ -378,7 +383,7 @@ function ENT:Think()
 	end
 	
 	//Getting flask
-	for k, v in pairs(ents.FindInSphere(self:GetPos() + Vector(0, 0, 25), 20)) do
+	for k, v in pairs(ents.FindInSphere(self:GetPos() + Vector(0, 0, 25), 25)) do
 		if IsValid(v) and IsValid(v:GetPhysicsObject()) and v:GetClass() == "fom_flask" and self.liquid_state then
 			if not v.Used and self.liquid_state then v.Desc = self.liquid_state v.Used = true self.liquid_amount = self.liquid_amount - 5 end
 		end
@@ -390,7 +395,7 @@ function ENT:Think()
 	
 		--[[Fixed null prop check]]--
 		//Getting ingredients
-		for k, v in pairs(ents.FindInSphere(self:GetPos() + Vector(0, 0, 22), 14)) do
+		for k, v in pairs(ents.FindInSphere(self:GetPos() + Vector(0, 0, 22), 25)) do
 			if IsValid(v) and IsValid(v:GetPhysicsObject()) then
 				if fom_GetIngredient(v) and not table.HasValue(self.brew_ingredients, v) then
 					self:SetUpIngredient(v)
@@ -404,8 +409,7 @@ function ENT:Think()
 			end
 		end
 		
-	self:MakeBubbles()
-	
+		self:MakeBubbles()
 	else
 		for k, v in pairs(self.brew_ingredients) do self:RemoveIngredient(v) end
 	end

@@ -99,7 +99,7 @@ spawnmenu.AddCreationTab("Magic", function()
 	
 	//Runes
 	local folder_runes = tree:AddNode("Runes", "icon16/script.png")
-	
+	fom_spawnmenuaddtab("icon16/wand.png", "Weapons", "fom_weapon_r", folder_runes, tab)
 	
 	//Help and guides
 	local folder_help = tree:AddNode("Help", "icon16/information.png")
@@ -112,7 +112,7 @@ spawnmenu.AddCreationTab("Magic", function()
 			local helptext = vgui.Create("DLabel", self.SpawnPanel)
 			
 			helptext:SetText(v.text)
-			helptext:SetFont("DefaultFixed")
+			helptext:SetFont("Trebuchet18")
 			helptext:SetPos(25, 25)
 			helptext:SizeToContents()
 			helptext:SetColor(Color(0, 0, 0))

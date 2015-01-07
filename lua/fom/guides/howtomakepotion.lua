@@ -2,7 +2,7 @@ if SERVER then return end
 
 fom_spawnmenuaddinfotab("icon16/rainbow.png", "How to make potion?", [[
 	First, you need the cauldron. Spawn it from Magic => Alchemy => Alchemist's stuff.
-	Throw cauldron into water and take it. 
+	Throw cauldron into water and take it, or get water bottle and pour it into cauldron.
 	
 	Second, when you fill cauldron, you need the bonfire. Spawn it from Magic => Alchemy => Alchemist's stuff.
 	Place it under cauldron.
@@ -14,5 +14,4 @@ fom_spawnmenuaddinfotab("icon16/rainbow.png", "How to make potion?", [[
 	
 	That's all! Your potions is ready. You can drink it by pressing E on the flask or throw it at somebody, what will cause 
 	potion's effect on the person you hit.
-	
 ]])

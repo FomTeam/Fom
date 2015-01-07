@@ -12,8 +12,6 @@ ENT.Base = "base_gmodentity"
 ENT.Spawnable = false
 /*** Main variables END ***/
 
-ENT.Wait = 0
-
 if CLIENT then _addMagicEntity("Crystal ball", "fom_sphere", "fom_entity_stuff") end
 
 function ENT:Initialize()
@@ -34,8 +32,6 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_VPHYSICS)
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetColor(Color(255, 0, 255))
-	
-	self.Wait = 0
 end
 
 function ENT:OnRemove()
@@ -98,6 +94,8 @@ if SERVER then
 		local ply = net.ReadEntity()
 		
 		ply.fom_crystal_ball = false
+		ply.fom_cb_wait = CurTime() + 2
+		ply:SetFOV(0, 0)
 		hook.Remove("Move", "fom_freezeply" .. ply:EntIndex())
 	end)
 end
@@ -105,7 +103,7 @@ end
 function ENT:Use(activator, caller)
 	if CLIENT then return end
 	if not caller:IsPlayer() then return end
-	if CurTime() < self.Wait then return end
+	if caller.fom_cb_wait and CurTime() < caller.fom_cb_wait then return end
 	if caller.fom_crystal_ball then return end
 	
 	hook.Add("Move", "fom_freezeply" .. caller:EntIndex(), function(ply, mv)
@@ -120,8 +118,9 @@ function ENT:Use(activator, caller)
 		umsg.Entity(self)
 	umsg.End()
 	
+	caller:SetFOV(60, 0)
 	caller.fom_crystal_ball = true
-	self.Wait = CurTime() + 1.5
+	caller.fom_cb_wait = CurTime() + 2
 end
 
 if CLIENT then
@@ -176,14 +175,15 @@ if CLIENT then
 				tab["$pp_colour_addg"] = 0
 				tab["$pp_colour_addb"] = 0.1
 				tab["$pp_colour_brightness"] = -0.1
-				tab["$pp_colour_contrast"] = 1
+				tab["$pp_colour_contrast"] = 1.1
 				tab["$pp_colour_colour"] = 1
-				tab["$pp_colour_mulr"] = 0
+				tab["$pp_colour_mulr"] = 2
 				tab["$pp_colour_mulg"] = 0
-				tab["$pp_colour_mulb"] = 2 
+				tab["$pp_colour_mulb"] = 4 
 			 
 				DrawColorModify(tab)
-			
+				DrawBloom(0.6, 1, 15, 10, 3, 3, 1, 0, 1)
+				DrawMotionBlur(0.4, 0.8, 0.05)
 				DrawMaterialOverlay("effects/water_warp01.vmt", 0.1)
 			end)
 			hook.Add("HUDShouldDraw", "fom_disablehud" .. self:EntIndex(), function(name) if name == "CHudChat" then return true end return false end)

@@ -11,6 +11,6 @@ fom_spawnmenuaddinfotab("icon16/information.png", "About", [[
 	
 	Developers team:
 		Mr. Mind
-		kekc
+		TrojanWarrior
 		EgrOnWire
 ]])

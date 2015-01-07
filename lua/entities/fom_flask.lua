@@ -38,7 +38,10 @@ function ENT:Boom(pos)
 		ef:SetStart(Vector(self.Desc.color.r, self.Desc.color.g, self.Desc.color.b))
 		util.Effect("fom_effect_boom", ef)
 	end
-		
+	
+	local ef = EffectData()
+	ef:SetOrigin(pos)
+	for i = 1, 10 do util.Effect("GlassImpact", ef) end
 	self:EmitSound("physics/glass/glass_bottle_break" .. math.random(1, 2) .. ".wav")
 	
 	self:Remove()

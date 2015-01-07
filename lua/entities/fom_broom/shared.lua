@@ -7,10 +7,7 @@ ENT.Spawnable = false
 ENT.Wait = 0
 
 local function tonumberb(bool)
-	local n = 0
-	if bool then n = 1 end
-	
-	return n
+	return bool and 1 or 0
 end
 
 function ENT:Draw()
