@@ -22,7 +22,7 @@ SWEP.AutoSwitchFrom		= false
 
 SWEP.Primary.ClipSize		= -1
 SWEP.Primary.DefaultClip	= -1
-SWEP.Primary.Automatic		= false
+SWEP.Primary.Automatic		= true
 SWEP.Primary.Ammo			= "none"
 
 SWEP.Secondary.ClipSize		= -1
@@ -43,7 +43,7 @@ SWEP.ViewModelBoneMods = {
 	["ValveBiped.Bip01_R_Finger3"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 41.111, 21.111) },
 	["ValveBiped.Bip01_R_Finger4"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(0, 32.222, 27.777) },
 	["ValveBiped.Bip01_R_Hand"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(47.777, 36.666, -27.778) },
-	["ValveBiped.Bip01_L_Clavicle"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(57.777, 36.666, -27.778) }
+	["ValveBiped.Bip01_L_Clavicle"] = { scale = Vector(1, 1, 1), pos = Vector(0, 0, 0), angle = Angle(77.777, 36.666, -27.778) }
 }
 
 if CLIENT then	
@@ -104,39 +104,20 @@ function SWEP:OnRemove()
 end
 
 function SWEP:PrimaryAttack()
-	self:SetNextPrimaryFire(CurTime() + 0.4)
+	self:SetNextPrimaryFire(CurTime() + 0.2)
 	self.Weapon:SendWeaponAnim(ACT_VM_DRAW)
 	self.Owner:GetViewModel():SetPlaybackRate(2.6)
 
 	if CLIENT then return end
 
-	/*local cur = fom_spells_list[self:GetNWFloat("fom_spell")]
+	local cur = fom_runes_list[self:GetNWFloat("fom_rune")]
 	
-	timer.Simple(0.3, function()
-		if self and self.Owner and IsValid(self) and IsValid(self.Owner) then
-			if not cur then return end
-		
-			if cur.sound then 
-				local pitch = 100
-				if cur.pitch then pitch = cur.pitch end
-				self.Owner:EmitSound(cur.sound, 100, pitch) 
-			end
-			
-			if not cur.efffunc then
-				local ef = EffectData()
-				ef:SetStart(Vector(cur.color.r, cur.color.g, cur.color.b))
-				ef:SetOrigin(self.Owner:GetShootPos() + self.Owner:GetAimVector() * 64)
-				ef:SetEntity(self.Owner)
-				util.Effect("fom_effect_warlock", ef)
-			else
-				cur.efffunc(self)
-			end
-			
-			self.Owner:EmitSound("npc/antlion/attack_single" .. math.random(1, 3) .. ".wav", 100, 40)
-
-			if cur.func then cur.func(self) end
-		end
-	end)*/
+	local ent = ents.Create("fom_base_fireball")
+	ent:SetPos(self.Owner:GetShootPos() + self.Owner:GetAimVector() * 70)
+	ent:Spawn()
+	ent:Activate()
+	ent.DATA = cur
+	ent:GetPhysicsObject():SetVelocity(self.Owner:GetAimVector() * 99999)
 end
 
 function SWEP:SecondaryAttack()
@@ -145,6 +126,15 @@ function SWEP:SecondaryAttack()
 	umsg.Start("fom_r_open", self.Owner)
 		umsg.Entity(self)
 	umsg.End()
+end
+
+local function get(self)
+	local str = ""
+	for k, v in pairs(self.Runes) do
+		str = str .. v .. " "
+	end
+	
+	return str
 end
 
 usermessage.Hook("fom_r_open", function(data)
@@ -156,6 +146,7 @@ usermessage.Hook("fom_r_open", function(data)
 	self.win:SetSize(750, 500)
 	self.win:SetTitle("")
 	self.win:Center()
+	self.win:ShowCloseButton(false)
 	self.win:MakePopup()
 	self.win.Paint = function()
 		local w = self.win:GetWide()
@@ -166,34 +157,93 @@ usermessage.Hook("fom_r_open", function(data)
 		surface.DrawTexturedRect(0, 0, w, t)
 	end
 	
-	local cpanel = vgui.Create("DPanel", self.win)
-	cpanel:SetPos(40, 40)
-	cpanel:SetSize(670, 165)
-	cpanel.Paint = function()
-		local w = cpanel:GetWide()
-		local t = cpanel:GetTall()
-		
-		surface.SetDrawColor(100, 100, 100, 130)
-		surface.DrawRect(0, 0, w, t)
-	end
-	
-	local panel = vgui.Create("DPanel", self.win)
-	panel:SetPos(40, 310)
-	panel:SetSize(670, 165)
-	panel.Paint = function()
-		local w = panel:GetWide()
-		local t = panel:GetTall()
-		
-		surface.SetDrawColor(100, 100, 100, 130)
-		surface.DrawRect(0, 0, w, t)
-	end
-	
+	local cur
 	local cr = vgui.Create("DButton", self.win)
 	cr:SetSize(150, 50)
 	cr:Center()
 	cr:SetText("Make rune")
+	cr:SetDisabled(true)
 	cr.DoClick = function()
+		cur:Clear()
 		
+		local str = get(self)
+		cur:AddLine(fom_runes_manager.GetRuneByRecipe(string.sub(str, 0, string.len(str) - 1)).name)
+	end
+	
+	local cpanel = vgui.Create("DListView", self.win)
+	cpanel:SetPos(40, 40)
+	cpanel:SetSize(670, 165)
+	cpanel:AddColumn("Craft panel")
+	cpanel.OnClickLine = function(p, line, i)
+		local v = fom_runes_manager.GetRuneByName(line:GetValue(1))
+		if not v.type then 
+			net.Start("fom_send_rune")
+				net.WriteEntity(self)
+				net.WriteString(line:GetValue(1))
+			net.SendToServer()
+		
+			return
+		end
+	
+		table.RemoveByValue(self.Runes, line:GetValue(1))
+		cpanel:RemoveLine(line:GetID())
+		
+		local str = get(self)
+		cr:SetDisabled(true)
+		if fom_runes_manager.GetRuneByRecipe(string.sub(str, 0, string.len(str) - 1)) then
+			cr:SetDisabled(false)
+		end
+	end
+	cur = cpanel
+	
+	local panel = vgui.Create("DListView", self.win)
+	panel:SetPos(40, 310)
+	panel:SetSize(670, 165)
+	panel:AddColumn("Rune")
+	for k, v in pairs(fom_runes_list) do
+		if v.type == "def" then
+			panel:AddLine(v.name)
+		end
+	end
+	panel.OnClickLine = function(p, line, i)
+		net.Start("fom_send_rune")
+			net.WriteEntity(self)
+			net.WriteString(line:GetValue(1))
+		net.SendToServer()
+		
+		if self.fom_wait_next_rune_select and CurTime() > self.fom_wait_next_rune_select then
+			cpanel:AddLine(line:GetValue(1))
+			table.insert(self.Runes, line:GetValue(1))
+			
+			local str = get(self)
+			cr:SetDisabled(true)
+			if fom_runes_manager.GetRuneByRecipe(string.sub(str, 0, string.len(str) - 1)) then
+				cr:SetDisabled(false)
+			end
+		end
+		self.fom_wait_next_rune_select = CurTime() + 0.2
+	end
+	
+	local lab = vgui.Create("DLabel", self.win)
+	lab:Center()
+	local x, y = lab:GetPos()
+	lab:SetPos(x - 290, y)
+	lab:SetFont("Trebuchet20")
+	lab:SetColor(Color(0, 0, 0, 255))
+	lab.Think = function()
+		local text = self:GetNWFloat("fom_rune") and fom_runes_list[self:GetNWFloat("fom_rune")].name or ""
+		lab:SetText("Selected rune: " .. string.lower(text))
+		lab:SizeToContents()
+	end
+	
+	local sr = vgui.Create("DButton", self.win)
+	sr:SetSize(150, 50)
+	sr:Center()
+	local x, y = sr:GetPos()
+	sr:SetPos(x + 160, y)
+	sr:SetText("Select rune")
+	sr.DoClick = function()
+		self.win:Close()
 	end
 end)
 

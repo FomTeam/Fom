@@ -62,8 +62,6 @@ end
 
 //Checks all potions and returns it if found one
 fom_potions_manager.GetPotionByRecipe = function(recipe)
-	local str = string.Explode(" ", string.lower(recipe))
-
 	//Here is bad way to find potion
 	local count = 0
 	for _, v in pairs(fom_potions_list) do

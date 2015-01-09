@@ -12,7 +12,7 @@ ENT.Base = "base_gmodentity"
 ENT.Spawnable = false
 /*** Main variables END ***/
 
-if CLIENT then _addMagicEntity("Furnace", "fom_furnace") end
+//if CLIENT then _addMagicEntity("Furnace", "fom_furnace") end
 
 function ENT:Initialize()
 	if CLIENT then return end
